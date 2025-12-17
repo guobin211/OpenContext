@@ -446,7 +446,7 @@ impl Searcher {
             let display_name = hit
                 .file_path
                 .split('/')
-                .last()
+                .next_back()
                 .unwrap_or(&hit.file_path)
                 .trim_end_matches(".md")
                 .to_string();
@@ -533,7 +533,7 @@ impl Searcher {
             } else {
                 folder_path
                     .split('/')
-                    .last()
+                    .next_back()
                     .unwrap_or(&folder_path)
                     .to_string()
             };

@@ -221,7 +221,7 @@ impl VectorStore {
                 let file_path = file_paths.value(i).to_string();
                 let display_name = file_path
                     .split('/')
-                    .last()
+                    .next_back()
                     .unwrap_or(&file_path)
                     .trim_end_matches(".md")
                     .to_string();
@@ -375,7 +375,7 @@ impl VectorStore {
                 let file_path = file_paths.value(i).to_string();
                 let display_name = file_path
                     .split('/')
-                    .last()
+                    .next_back()
                     .unwrap_or(&file_path)
                     .trim_end_matches(".md")
                     .to_string();

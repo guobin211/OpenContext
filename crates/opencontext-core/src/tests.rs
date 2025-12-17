@@ -3,7 +3,6 @@
 #[cfg(test)]
 mod context_tests {
     use crate::{EnvOverrides, OpenContext};
-    use std::path::PathBuf;
     use tempfile::TempDir;
 
     fn create_test_context() -> (OpenContext, TempDir) {
@@ -62,7 +61,6 @@ mod context_tests {
 
 #[cfg(test)]
 mod folder_tests {
-    use super::context_tests::*;
     use crate::{EnvOverrides, OpenContext};
     use tempfile::TempDir;
 

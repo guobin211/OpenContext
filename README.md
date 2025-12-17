@@ -34,11 +34,37 @@ npm install -g opencontext
 # npx opencontext <command>
 ```
 
-## Beginner quick start (the shortest path)
+## Quick start (beginner-friendly)
 
-One sentence: **run `oc init`, then use `/opencontext-*` inside Cursor**.
+Pick the path that matches how you work:
 
-### 1) Initialize (once per machine)
+- **I just want a personal context/notes manager** → use the **Desktop app** (no CLI required)
+- **I want to use OpenContext with a coding agent / Cursor slash commands / MCP** → install the **CLI** and run `oc init`
+
+### Path A — Desktop app (recommended for most users)
+
+If you want to manage contexts like a normal app (browse/search/edit), the desktop app is the easiest entry point.
+
+- **Use it**: download from GitHub Releases (desktop installer)
+- **No `oc init` needed** for basic usage
+
+Developer notes (this repo):
+
+```bash
+npm run tauri:dev
+```
+
+```bash
+npm run tauri:build
+```
+
+> The desktop app uses the same global `contexts/` and database described below.
+
+### Path B — CLI + Cursor / Coding Agent integration
+
+If you want your IDE / agent platform to call OpenContext as tools (MCP) and use beginner slash commands, use the CLI.
+
+#### 1) Initialize (once per machine)
 
 ```bash
 oc init
@@ -56,7 +82,7 @@ export OPENCONTEXT_CONTEXTS_ROOT="/path/to/contexts"
 export OPENCONTEXT_DB_PATH="/path/to/opencontext.db"
 ```
 
-### 2) Use it in Cursor (5 commands for beginners)
+#### 2) Use it in Cursor (5 commands for beginners)
 
 After `oc init`, your repo will have Cursor command templates under `.cursor/commands/opencontext-*.md`. In Cursor, use these slash commands:
 
@@ -68,9 +94,7 @@ After `oc init`, your repo will have Cursor command templates under `.cursor/com
 
 > Important: these commands read/write your **global** OpenContext library (default `~/.opencontext/contexts`). They do **not** copy docs into your project repo.
 
-### 3) If you don’t use Cursor: CLI or Desktop app
-
-#### A) CLI
+#### 3) Minimal CLI usage (without Cursor)
 
 ```bash
 # Create folders and docs (docs must be created/registered via oc)
@@ -80,24 +104,6 @@ oc doc create project-a design.md -d "Design doc"
 # Generate a “manifest” (a file list for assistants to batch-read)
 oc context manifest project-a
 ```
-
-#### B) Desktop app (Tauri)
-
-If you prefer a “notes app” experience, use the desktop app to browse/search/edit contexts.
-
-- **Dev (this repo)**:
-
-```bash
-npm run tauri:dev
-```
-
-- **Build installers (this repo)**:
-
-```bash
-npm run tauri:build
-```
-
-> The desktop app uses the same `contexts/` and database. It’s the same UI packaged as a desktop app (Tauri) with desktop capabilities.
 
 ## Search (/opencontext-search) and “index cost”
 
@@ -114,6 +120,62 @@ Semantic search typically requires building an index (`oc index build`). Index b
 - **Do not let an AI assistant auto-run `oc index build`**
 - If the index is missing, **degrade gracefully**: use manifest + doc descriptions / filenames first; you can choose to build the index manually if needed
 
+### Search configuration (Desktop/Web settings + CLI config commands)
+
+#### Which search modes need embeddings?
+
+- **`--mode keyword`**: keyword-only search, **no embeddings / API key needed**
+- **`--mode vector`**: vector-only semantic search, **requires embeddings**
+- **`--mode hybrid` (default)**: combines keyword + vector, **requires embeddings**
+
+#### Where to configure embeddings
+
+Hybrid / vector search uses embeddings. You can configure embedding settings in:
+
+- **Desktop app / Web UI**: System Settings → Global Config (then rebuild the index)
+- **CLI**: `oc config ...` (see “CLI command reference” below)
+
+#### Embedding config keys (CLI)
+
+OpenContext uses these config keys:
+
+- **`EMBEDDING_API_KEY`** (sensitive): your embedding provider key  
+- **`EMBEDDING_API_BASE`**: API base URL (default `https://api.openai.com/v1`)  
+- **`EMBEDDING_MODEL`**: model name (default `text-embedding-3-small`)  
+
+Priority order is: **environment variables > config file > defaults**.  
+You can inspect the active config with `oc config list`.
+
+#### Typical CLI setup
+
+```bash
+oc config list
+oc config set EMBEDDING_API_KEY "<your_key>"
+oc config set EMBEDDING_API_BASE "https://api.openai.com/v1"
+oc config set EMBEDDING_MODEL "text-embedding-3-small"
+
+# Check where config is stored:
+oc config path
+
+# Rebuild index after config changes:
+oc index build
+```
+
+#### Validate configuration & search
+
+```bash
+# Check if an index exists / is ready:
+oc index status
+
+# Try a keyword-only search (works without embeddings/index):
+oc search "your query" --mode keyword --format json
+
+# Try hybrid (requires index + embeddings):
+oc search "your query" --mode hybrid --format json
+```
+
+> Note: After changing embedding config, you must rebuild the index for changes to take effect (`oc index build`). Keep API keys out of git and never paste secrets into docs.
+
 ## MCP (for VibeCoding IDEs / agent platforms)
 
 OpenContext provides `oc mcp` as an MCP server (stdio).
@@ -127,6 +189,40 @@ oc mcp
 - **Cursor auto-config**: `oc init` generates `.cursor/mcp.json` and registers an MCP server named `opencontext` pointing to `oc mcp`.
 
 > In most cases you don’t need to touch MCP config. Run `oc init`, then use `/opencontext-*` in Cursor.
+
+## CLI command reference (complete list)
+
+Run `oc <cmd> --help` for details.
+
+| Category | Command | What it does |
+|---|---|---|
+| Environment | `oc init` | Initialize contexts + database and generate project artifacts |
+| Folders | `oc folder ls [--all]` | List folders |
+| Folders | `oc folder create <path> -d "<desc>"` | Create a folder |
+| Folders | `oc folder rename <old_path> <new_name>` | Rename a folder |
+| Folders | `oc folder rm <path> [--force]` | Remove a folder (optionally recursive) |
+| Documents | `oc doc ls <folder_path> [--recursive]` | List docs in a folder |
+| Documents | `oc doc create <folder_path> <name>.md -d "<desc>"` | Create/register a doc |
+| Documents | `oc doc mv <doc_path> <new_folder_path>` | Move a doc to another folder |
+| Documents | `oc doc rename <doc_path> <new_name>` | Rename a doc |
+| Documents | `oc doc rm <doc_path>` | Remove a doc |
+| Documents | `oc doc set-desc <doc_path> "<summary>"` | Update doc description (for triage/search) |
+| Documents | `oc doc id <doc_path>` | Print stable_id (UUID) |
+| Documents | `oc doc resolve <stable_id>` | Resolve a stable_id to current path/meta |
+| Documents | `oc doc link <doc_path> [--label <label>]` | Generate an `oc://doc/<stable_id>` link |
+| Documents | `oc doc open <doc_path>` | Open doc in your editor |
+| Manifest | `oc context manifest <folder_path> [--limit N]` | Output a JSON file list for batch reading |
+| Search | `oc search "<query>" --format json ...` | Search with `mode` and `type` options |
+| Index | `oc index build [--force] [--folder <folder>]` | Build/update the search index |
+| Index | `oc index status` | Show index status |
+| Index | `oc index clean` | Clean/reset the index |
+| Config | `oc config set <KEY> <VALUE>` | Set config (e.g., embeddings) |
+| Config | `oc config get <KEY>` | Get config value |
+| Config | `oc config unset <KEY>` | Remove config value |
+| Config | `oc config list` | List config values (masked if sensitive) |
+| Config | `oc config path` | Print config file path |
+| Servers | `oc mcp [--test]` | Start MCP server (stdio) |
+| UI | `oc ui [--port <port>] [--host <host>] [--no-open]` | Start the Web UI server |
 
 ## Web UI (experimental)
 

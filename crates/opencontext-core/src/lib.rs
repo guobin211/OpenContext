@@ -266,7 +266,7 @@ impl OpenContext {
             });
         }
         let ts = now_iso();
-        let name = rel_path.split('/').last().unwrap_or(&rel_path).to_string();
+        let name = rel_path.split('/').next_back().unwrap_or(&rel_path).to_string();
         let abs_path = self.contexts_root.join(&rel_path);
         fs::create_dir_all(&abs_path)?;
         self.with_conn(|conn| {
@@ -635,26 +635,24 @@ impl OpenContext {
                     .query_map([pattern], row_to_doc)?
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(rows)
+            } else if rel_folder_path.is_empty() {
+                let mut stmt = conn.prepare(
+                    "SELECT id, folder_id, name, rel_path, abs_path, description, stable_id, created_at, updated_at
+                     FROM docs WHERE folder_id IS NULL ORDER BY name",
+                )?;
+                let rows = stmt
+                    .query_map([], row_to_doc)?
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(rows)
             } else {
-                if rel_folder_path.is_empty() {
-                    let mut stmt = conn.prepare(
-                        "SELECT id, folder_id, name, rel_path, abs_path, description, stable_id, created_at, updated_at
-                         FROM docs WHERE folder_id IS NULL ORDER BY name",
-                    )?;
-                    let rows = stmt
-                        .query_map([], row_to_doc)?
-                        .collect::<Result<Vec<_>, _>>()?;
-                    Ok(rows)
-                } else {
-                    let mut stmt = conn.prepare(
-                        "SELECT id, folder_id, name, rel_path, abs_path, description, stable_id, created_at, updated_at
-                         FROM docs WHERE folder_id = ?1 ORDER BY name",
-                    )?;
-                    let rows = stmt
-                        .query_map([folder.id], row_to_doc)?
-                        .collect::<Result<Vec<_>, _>>()?;
-                    Ok(rows)
-                }
+                let mut stmt = conn.prepare(
+                    "SELECT id, folder_id, name, rel_path, abs_path, description, stable_id, created_at, updated_at
+                     FROM docs WHERE folder_id = ?1 ORDER BY name",
+                )?;
+                let rows = stmt
+                    .query_map([folder.id], row_to_doc)?
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(rows)
             }
         })
     }
@@ -1005,7 +1003,7 @@ impl OpenContext {
         let abs_path = self.contexts_root.join(rel_path);
         fs::create_dir_all(&abs_path)?;
         let ts = now_iso();
-        let name = rel_path.split('/').last().unwrap_or(rel_path);
+        let name = rel_path.split('/').next_back().unwrap_or(rel_path);
         self.with_conn(|conn| {
             conn.execute(
                 "INSERT INTO folders (parent_id, name, rel_path, abs_path, description, created_at, updated_at)

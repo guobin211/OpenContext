@@ -122,7 +122,7 @@ impl Indexer {
 
         // Process documents in batches
         let batch_size = 10;
-        let total_batches = (docs.len() + batch_size - 1) / batch_size;
+        let total_batches = docs.len().div_ceil(batch_size);
 
         for (batch_idx, batch) in docs.chunks(batch_size).enumerate() {
             let mut all_chunks = Vec::new();
@@ -194,7 +194,7 @@ impl Indexer {
                 current: batch_idx + 1,
                 total: total_batches,
                 percent: ((batch_idx * 100 + 66) / total_batches.max(1)) as u8,
-                message: Some(format!("正在写入索引...")),
+                message: Some("正在写入索引...".to_string()),
             });
 
             let count = self.vector_store.upsert(all_chunks).await?;

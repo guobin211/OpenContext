@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use super::error::{SearchError, SearchResult};
 
 /// Main search configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SearchConfig {
     /// Embedding API configuration
     #[serde(default)]
@@ -19,16 +19,6 @@ pub struct SearchConfig {
     /// Paths configuration
     #[serde(default)]
     pub paths: PathsConfig,
-}
-
-impl Default for SearchConfig {
-    fn default() -> Self {
-        Self {
-            embedding: EmbeddingConfig::default(),
-            search: SearchBehaviorConfig::default(),
-            paths: PathsConfig::default(),
-        }
-    }
 }
 
 /// Embedding API configuration
@@ -142,7 +132,7 @@ fn default_chunk_overlap() -> usize {
 }
 
 /// Paths configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PathsConfig {
     /// LanceDB database path
     #[serde(default)]
@@ -151,15 +141,6 @@ pub struct PathsConfig {
     /// Index metadata path
     #[serde(default)]
     pub index_metadata_path: Option<PathBuf>,
-}
-
-impl Default for PathsConfig {
-    fn default() -> Self {
-        Self {
-            lancedb_path: None,
-            index_metadata_path: None,
-        }
-    }
 }
 
 impl PathsConfig {
