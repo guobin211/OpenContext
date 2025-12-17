@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+
+# Database
+opencontext.db
+*.db
+
+# User data
+contexts/
+
+# Build outputs
+dist/
+
+# Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
+src-tauri/gen/
+
+# Native module builds
+crates/opencontext-node/*.node
+crates/opencontext-node/target/
+crates/opencontext-node/npm/
+crates/opencontext-node/Cargo.lock
+
+# Rust
+crates/*/target/
+*.lock
+!package-lock.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Backup files
+*.bak
+*.backup
+
+# Local config (use mcp.example.json as template)
+mcp.json

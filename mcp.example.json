@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "opencontext": {
+      "command": "oc",
+      "args": ["mcp"],
+      "cwd": "$HOME"
+    }
+  }
+}
+

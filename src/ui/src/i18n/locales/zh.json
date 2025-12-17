@@ -1,0 +1,271 @@
+{
+  "app": {
+    "name": "OpenContext"
+  },
+
+  "common": {
+    "confirm": "确认",
+    "cancel": "取消",
+    "delete": "删除",
+    "save": "保存",
+    "move": "移动",
+    "error": "错误",
+    "success": "成功",
+    "switchToZh": "切换到中文",
+    "switchToEn": "Switch to English",
+    "editDescription": "编辑描述",
+    "addDescription": "+ 添加描述",
+    "refresh": "刷新"
+  },
+
+  "save": {
+    "synced": "已同步",
+    "unsaved": "未保存",
+    "saving": "保存中...",
+    "failed": "保存失败"
+  },
+
+  "sidebar": {
+    "spaces": "空间",
+    "refresh": "刷新侧边栏",
+    "newFolder": "新建文件夹",
+    "newPage": "新建页面"
+  },
+
+  "toc": {
+    "hide": "隐藏目录",
+    "show": "显示目录",
+    "title": "本页目录"
+  },
+
+  "contextMenu": {
+    "copyCitation": "复制引用",
+    "move": "移动…",
+    "newPage": "新建页面",
+    "newFolder": "新建文件夹",
+    "rename": "重命名",
+    "delete": "删除",
+    "editDescription": "编辑描述…"
+  },
+
+  "dialog": {
+    "newPage": {
+      "title": "新建页面",
+      "placeholder": "页面名称（如 notes/meeting）"
+    },
+    "newFolder": {
+      "title": "新建文件夹",
+      "placeholder": "文件夹名称"
+    },
+    "move": {
+      "pageTitle": "移动页面",
+      "folderTitle": "移动文件夹",
+      "placeholder": "目标文件夹路径（如 product/ideas）",
+      "confirmMessage": "确定要将「{{name}}」移动到「{{target}}」吗？"
+    },
+    "rename": {
+      "title": "重命名",
+      "placeholder": "新路径"
+    },
+    "editDescription": {
+      "title": "编辑描述",
+      "message": "支持 Markdown，包括 `[label](oc://doc/<stable_id>)`。",
+      "placeholder": "描述（支持 Markdown）"
+    },
+    "deleteItem": {
+      "title": "删除项目",
+      "message": "确定要删除「{{name}}」吗？此操作不可撤销。",
+      "confirmText": "删除"
+    }
+  },
+
+  "error": {
+    "rootNotSupported": "不支持根目录，请指定 contexts/ 下的文件夹。",
+    "cannotMoveIntoSelf": "不能将文件夹移动到自身或其子目录中。",
+    "copied": "已复制",
+    "copyFailed": "复制失败",
+    "refreshFailed": "刷新失败",
+    "operationFailed": "操作失败",
+    "invalidOperation": "无效操作"
+  },
+
+  "citation": {
+    "docCopied": "文档引用已复制到剪贴板，可粘贴到 AI 对话框中使用。",
+    "folderCopied": "目录引用已复制到剪贴板，可粘贴到 AI 对话框中使用。"
+  },
+
+  "diffGate": {
+    "copied": "已复制",
+    "copyFailed": "复制失败",
+    "copiedRemote": "已复制远端最新内容到剪贴板",
+    "copyRemote": "复制远端内容"
+  },
+
+  "notification": {
+    "newPages": "空间「{{space}}」发现 {{count}} 个新页面，点击刷新侧边栏查看。",
+    "refresh": "刷新",
+    "dismiss": "忽略"
+  },
+
+  "codeBlock": {
+    "copy": "复制",
+    "copied": "已复制！",
+    "delete": "删除",
+    "deleteTitle": "删除代码块"
+  },
+
+  "toolbar": {
+    "askAi": "引用",
+    "copyQuote": "复制引用到剪贴板",
+    "noText": "未选中可引用文本",
+    "copied": "已复制引用",
+    "copyFailed": "复制失败",
+    "bold": "加粗 (⌘B)",
+    "italic": "斜体 (⌘I)",
+    "strikethrough": "删除线",
+    "code": "代码"
+  },
+
+  "table": {
+    "addRowBefore": "上方插入行",
+    "addRowAfter": "下方插入行",
+    "addColBefore": "左侧插入列",
+    "addColAfter": "右侧插入列",
+    "deleteRow": "删除行",
+    "deleteCol": "删除列",
+    "deleteTable": "删除表格"
+  },
+
+  "pageRef": {
+    "title": "引用页面",
+    "placeholder": "搜索页面（按标题/路径/描述）",
+    "loadFolderFail": "加载目录失败",
+    "missingId": "该文档缺少可用标识（stable_id/rel_path）",
+    "inserted": "已插入页面引用",
+    "insertFail": "插入失败",
+    "tree": "目录",
+    "pages": "页面",
+    "results": "搜索结果",
+    "empty": "没有找到页面",
+    "esc": "ESC"
+  },
+
+  "emptyState": {
+    "title": "未选择文档",
+    "subtitle": "从侧边栏选择一个页面开始编写",
+    "createButton": "新建页面"
+  },
+
+  "editor": {
+    "placeholder": "输入 '/' 插入内容...",
+    "drag": "拖拽",
+    "serializeFailed": "序列化失败：请刷新后重试",
+    "untitled": "无标题",
+    "page": "页面",
+    "basicBlocks": "基础块"
+  },
+
+  "settings": {
+    "title": "系统设置",
+    "globalConfig": "全局配置",
+    "indexStatus": "索引状态",
+    "totalChunks": "索引块数",
+    "indexState": "索引状态",
+    "ready": "就绪",
+    "notBuilt": "未构建",
+    "lastUpdated": "上次更新",
+    "never": "从未",
+    "rebuildIndex": "重建索引",
+    "cleanIndex": "清除索引",
+    "configNote": "修改配置后需要重建索引才能生效",
+    "building": "构建中…",
+    "cleaning": "清除中…",
+    "rebuildSuccess": "索引重建成功",
+    "cleanSuccess": "索引已清除",
+    "confirmCleanIndex": "确定要清除搜索索引吗？清除后需要重新构建才能使用搜索功能。",
+    "edit": "编辑",
+    "embeddingModel": "Embedding Model",
+    "embeddingApiBase": "Embedding API Base",
+    "embeddingApiKey": "Embedding API Key",
+    "configPath": "配置文件路径",
+    "notConfigured": "未配置",
+    "showApiKey": "显示 Key",
+    "hideApiKey": "隐藏 Key",
+    "embeddingApiKeyPlaceholder": "输入 Embedding API Key",
+    "embeddingApiKeyPlaceholderExisting": "留空保持原值，输入新值则覆盖"
+  },
+
+  "search": {
+    "searchDocs": "搜索文档…",
+    "placeholder": "输入关键词搜索文档内容…",
+    "searching": "搜索中…",
+    "results": "搜索结果",
+    "noResults": "未找到匹配的文档",
+    "tryDifferent": "试试其他关键词",
+    "indexMissing": "搜索索引未构建，请先运行：",
+    "match": "匹配",
+    "hits": "处命中",
+    "hybrid": "混合搜索",
+    "semantic": "语义搜索",
+    "keyword": "关键词",
+    "tip": "输入任意内容开始搜索，支持自然语言查询",
+    "navigate": "导航",
+    "open": "打开",
+    "close": "关闭",
+    "poweredBy": "基于向量搜索 + 关键词匹配",
+    "toOpen": "打开搜索",
+    "untitled": "无标题"
+  },
+
+  "slashMenu": {
+    "h1": {
+      "label": "一级标题",
+      "description": "大型章节标题"
+    },
+    "h2": {
+      "label": "二级标题",
+      "description": "中型章节标题"
+    },
+    "h3": {
+      "label": "三级标题",
+      "description": "小型章节标题"
+    },
+    "bulletList": {
+      "label": "无序列表",
+      "description": "创建简单列表"
+    },
+    "numberedList": {
+      "label": "有序列表",
+      "description": "创建编号列表"
+    },
+    "taskList": {
+      "label": "任务列表",
+      "description": "带复选框的待办列表"
+    },
+    "table": {
+      "label": "表格",
+      "description": "插入表格（3×3）"
+    },
+    "columns2": {
+      "label": "两栏布局",
+      "description": "创建两列并排布局"
+    },
+    "columns3": {
+      "label": "三栏布局",
+      "description": "创建三列并排布局"
+    },
+    "quote": {
+      "label": "引用块",
+      "description": "捕获引用"
+    },
+    "codeBlock": {
+      "label": "代码块",
+      "description": "捕获代码片段"
+    },
+    "pageRef": {
+      "label": "引用页面",
+      "description": "引用其它页面（目录树 + 搜索）"
+    }
+  }
+}
+
