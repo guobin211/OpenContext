@@ -14,6 +14,10 @@ jobs:
   test-js:
     name: Test JS (${{ matrix.os }}, Node ${{ matrix.node }})
     runs-on: ${{ matrix.os }}
+    # Use bash shell for glob pattern support on Windows
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:

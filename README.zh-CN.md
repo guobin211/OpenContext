@@ -1,10 +1,12 @@
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/logo-light.png">
+    <img alt="OpenContext Logo" src="docs/images/logo-light.png" width="350">
+  </picture>
+</div>
+
 # OpenContext
-
-如果你第一次看到这个仓库，可能会有三个疑问：
-
-- **这到底解决什么问题？**
-- **对我有什么好处？**
-- **我该怎么用？**
 
 OpenContext 要解决的是：当你用 AI 助手做事时，**上下文会丢、历史决策会忘、跨天/跨仓库会断片**。你很容易重复解释背景、重复踩坑，甚至让 AI 在错误前提下继续执行。
 

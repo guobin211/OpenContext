@@ -1,12 +1,14 @@
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/logo-light.png">
+    <img alt="OpenContext Logo" src="docs/images/logo-light.png" width="350">
+  </picture>
+</div>
+
 # OpenContext
 
 [中文文档](README.zh-CN.md)
-
-If you’ve never heard of OpenContext, you’re probably wondering:
-
-- What problem does this solve?
-- What do I get out of it?
-- How do I start using it (without learning a bunch of internals)?
 
 OpenContext solves a very practical pain: when you use an AI assistant to build things, **context gets lost** (across days, repos, chats). You end up re-explaining background, repeating decisions, and sometimes the assistant continues with the wrong assumptions.
 

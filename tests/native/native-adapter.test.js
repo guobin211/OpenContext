@@ -12,6 +12,12 @@ const {
   NativeIndexer 
 } = require('../../src/core/search/native-adapter');
 
+// Check if API key is available (needed for search/index tests)
+const hasApiKey = !!(
+  process.env.EMBEDDING_API_KEY || 
+  process.env.OPENAI_API_KEY
+);
+
 describe('Native Adapter', async () => {
 
   describe('isNativeAvailable()', () => {
@@ -30,6 +36,8 @@ describe('Native Adapter', async () => {
 
   // Skip native tests if native bindings are not available
   const nativeAvailable = isNativeAvailable();
+  // Skip tests that require API key
+  const canRunSearchTests = nativeAvailable && hasApiKey;
   
   describe('NativeSearcher', { skip: !nativeAvailable }, async () => {
     let searcher;
@@ -51,12 +59,13 @@ describe('Native Adapter', async () => {
       assert.strictEqual(s.keywordWeight, 0.2);
     });
 
-    it('should initialize successfully', async () => {
+    // Tests that require API key
+    it('should initialize successfully', { skip: !canRunSearchTests }, async () => {
       await searcher.initialize();
       assert.strictEqual(searcher.initialized, true);
     });
 
-    it('should not re-initialize by default', async () => {
+    it('should not re-initialize by default', { skip: !canRunSearchTests }, async () => {
       const s = new NativeSearcher();
       await s.initialize();
       const firstSearcher = s._searcher;
@@ -64,14 +73,14 @@ describe('Native Adapter', async () => {
       assert.strictEqual(s._searcher, firstSearcher, 'Should be same instance');
     });
 
-    it('should force re-initialize when requested', async () => {
+    it('should force re-initialize when requested', { skip: !canRunSearchTests }, async () => {
       const s = new NativeSearcher();
       await s.initialize();
       await s.initialize(true);
       assert.strictEqual(s.initialized, true);
     });
 
-    describe('search()', { skip: !nativeAvailable }, async () => {
+    describe('search()', { skip: !canRunSearchTests }, async () => {
       it('should return array of results', async () => {
         const results = await searcher.search('test', { limit: 5 });
         assert.ok(Array.isArray(results));
@@ -147,19 +156,20 @@ describe('Native Adapter', async () => {
       assert.strictEqual(i.initialized, false);
     });
 
-    it('should initialize successfully', async () => {
+    // Tests that require API key
+    it('should initialize successfully', { skip: !canRunSearchTests }, async () => {
       await indexer.initialize();
       assert.strictEqual(indexer.initialized, true);
     });
 
-    describe('indexExists()', { skip: !nativeAvailable }, async () => {
+    describe('indexExists()', { skip: !canRunSearchTests }, async () => {
       it('should return boolean', async () => {
         const exists = await indexer.indexExists();
         assert.strictEqual(typeof exists, 'boolean');
       });
     });
 
-    describe('getStats()', { skip: !nativeAvailable }, async () => {
+    describe('getStats()', { skip: !canRunSearchTests }, async () => {
       it('should return stats object', async () => {
         const stats = await indexer.getStats();
         assert.strictEqual(typeof stats, 'object');
