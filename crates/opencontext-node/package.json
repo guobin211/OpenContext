@@ -24,8 +24,6 @@
     "build:debug": "napi build --platform",
     "test": "node --test test.js test-store.js",
     "test:store": "node --test test-store.js",
-    "artifacts": "napi artifacts",
-    "prepublishOnly": "napi prepublish -t npm",
     "version": "napi version"
   },
   "devDependencies": {
