@@ -565,7 +565,32 @@ fn main() {
             search_config,
             event_bus,
         })
-        .setup(move |_app| {
+        .setup(move |app| {
+            // Create Edit menu with predefined items for macOS
+            // PredefinedMenuItem items automatically trigger native WebView edit actions
+            #[cfg(target_os = "macos")]
+            {
+                use tauri::menu::{Menu, PredefinedMenuItem, Submenu};
+                
+                let edit_menu = Submenu::with_items(
+                    app,
+                    "Edit",
+                    true,
+                    &[
+                        &PredefinedMenuItem::undo(app, Some("Undo")).unwrap(),
+                        &PredefinedMenuItem::redo(app, Some("Redo")).unwrap(),
+                        &PredefinedMenuItem::separator(app).unwrap(),
+                        &PredefinedMenuItem::cut(app, Some("Cut")).unwrap(),
+                        &PredefinedMenuItem::copy(app, Some("Copy")).unwrap(),
+                        &PredefinedMenuItem::paste(app, Some("Paste")).unwrap(),
+                        &PredefinedMenuItem::select_all(app, Some("Select All")).unwrap(),
+                    ],
+                ).unwrap();
+                
+                let menu = Menu::with_items(app, &[&edit_menu]).unwrap();
+                app.set_menu(menu).unwrap();
+            }
+            
             // Start index sync service in background
             // Use tauri::async_runtime::spawn which works with Tauri's runtime management
             tauri::async_runtime::spawn(async move {
@@ -574,6 +599,7 @@ fn main() {
                     log::error!("[IndexSync] Service error: {}", e);
                 }
             });
+            
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -47,17 +47,22 @@ import { useTranslation } from 'react-i18next';
 
 // --- Editor utilities (P2 refactor) ---
 import { createEditorKeyDownHandler } from '../editor/keyboardHandlers';
+import { createCopyHandler, createPasteHandler } from '../editor/clipboardHandlers';
 
 // Create markdown plugin instance
 const markdownPlugin = createMarkdownPlugin();
 
 // --- Drag & Drop (blocks) using dnd-kit ---
+// Ref to temporarily disable DnD during bulk operations (e.g., delete all)
+const dndDisabledRef = { current: false };
+
 // Context to share active drag state across the editor
 const EditorDndContext = createContext({
   activeDragId: null,
   activeDragData: null,
   dropTargetId: null,
   dropPosition: null, // 'before' | 'after'
+  dndDisabled: false,
 });
 
 // Hook to access editor dnd context
@@ -79,10 +84,11 @@ const DragHandle = memo(({ dragRef, attributes, listeners, title, positionClass 
     title={title}
     contentEditable={false}
     tabIndex={-1}
-    className={`absolute ${positionClass} top-[0.15em] z-10 h-6 w-6 rounded border border-transparent text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing`}
+    className={`absolute ${positionClass} top-[0.15em] z-10 h-6 w-6 rounded border border-transparent text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing select-none`}
+    style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
     onMouseDown={(e) => e.stopPropagation()}
   >
-    <span className="block leading-none text-sm">⋮⋮</span>
+    <span className="block leading-none text-sm select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>⋮⋮</span>
   </button>
 ));
 
@@ -158,6 +164,11 @@ const BlockDraggableElement = memo(({ children, element, path }) => {
 
 // Inner component that uses dnd-kit hooks - only rendered for draggable elements
 const BlockDraggableInner = memo(({ id, element, path, isDragging, dropPosition, positionClass, dragTitle, children }) => {
+  // Skip dnd-kit hooks when DnD is disabled (performance optimization for bulk operations)
+  if (dndDisabledRef.current) {
+    return <div className="group relative overflow-visible"><div>{children}</div></div>;
+  }
+  
   const { attributes, listeners, setNodeRef: setDragRef } = useDraggable({
     id: `drag-${id}`,
     data: { element, path, id },
@@ -324,7 +335,7 @@ const EditorDndProvider = ({ children }) => {
           {activeDragData && (
             <div className="bg-white shadow-lg rounded-md px-4 py-2 border border-gray-200 text-sm text-gray-600 max-w-[300px] truncate">
               <span className="flex items-center gap-2">
-                <span className="text-gray-400">⋮⋮</span>
+                <span className="text-gray-400 select-none">⋮⋮</span>
                 {activeDragData.element?.type || 'Block'}
               </span>
             </div>
@@ -978,6 +989,7 @@ export function PlateMarkdownEditor({
     [editorId]
   );
 
+
   // Install compat normalizer once per editor instance.
   // Then force a normalize pass to fix ordered-list continuation after initial load.
   useEffect(() => {
@@ -1018,55 +1030,66 @@ export function PlateMarkdownEditor({
     return () => clearTimeout(t);
   }, [toast]);
 
-  // Debounce timer ref for onChange serialization
+  // Refs for debounced onChange serialization
   const serializeTimerRef = useRef(null);
   const pendingSerializeRef = useRef(false);
 
+  /**
+   * Serialize editor content and emit onChange if content has changed.
+   * Shared by both debounced updates and cleanup flush.
+   * @returns {boolean} true if onChange was called
+   */
+  const flushSerialize = useCallback(() => {
+    if (!editor || !onChange) return false;
+    
+    try {
+      const nextMarkdown = serializeMarkdown(editor, editor.children);
+      if (lastSerializedRef.current.value === nextMarkdown && lastSerializedRef.current.id === editorId) {
+        return false; // No change
+      }
+      lastSerializedRef.current = { id: editorId, value: nextMarkdown };
+      onChange(nextMarkdown);
+      return true;
+    } catch (e) {
+      console.warn('Markdown serialize failed:', e);
+      showToast(t('editor.serializeFailed'));
+      return false;
+    }
+  }, [editor, editorId, onChange, showToast, t]);
+
+  // Wire up debounced onChange handling
   useEffect(() => {
     if (!editor || !onChange) return;
     const originalOnChange = editor.onChange;
     
-    // Debounced serialization function
-    const debouncedSerialize = () => {
-      if (serializeTimerRef.current) {
-        clearTimeout(serializeTimerRef.current);
-      }
+    const scheduleSerialize = () => {
+      if (serializeTimerRef.current) clearTimeout(serializeTimerRef.current);
       pendingSerializeRef.current = true;
-      
       serializeTimerRef.current = setTimeout(() => {
         if (!pendingSerializeRef.current) return;
         pendingSerializeRef.current = false;
-        
-        let nextMarkdown = '';
-        try {
-          nextMarkdown = serializeMarkdown(editor, editor.children);
-        } catch (e) {
-          // If serialization fails (e.g. unexpected node types), never emit a change that could
-          // overwrite the document with empty content. Surface the error instead.
-          console.warn('Markdown serialize failed:', e);
-          showToast(t('editor.serializeFailed'));
-          return;
-        }
-        if (lastSerializedRef.current.value === nextMarkdown && lastSerializedRef.current.id === editorId) {
-          return;
-        }
-        lastSerializedRef.current = { id: editorId, value: nextMarkdown };
-        onChange(nextMarkdown);
-      }, 150); // 150ms debounce for better typing performance
+        flushSerialize();
+      }, 150); // 150ms debounce for typing performance
     };
     
     editor.onChange = () => {
       originalOnChange();
-      debouncedSerialize();
+      scheduleSerialize();
     };
     
     return () => {
       editor.onChange = originalOnChange;
       if (serializeTimerRef.current) {
         clearTimeout(serializeTimerRef.current);
+        serializeTimerRef.current = null;
+      }
+      // Flush pending changes to prevent data loss on document switch
+      if (pendingSerializeRef.current) {
+        pendingSerializeRef.current = false;
+        flushSerialize();
       }
     };
-  }, [editor, editorId, onChange]);
+  }, [editor, onChange, flushSerialize]);
 
   useEffect(() => {
     if (!editor) return;
@@ -1262,6 +1285,19 @@ export function PlateMarkdownEditor({
     [editor]
   );
 
+  // Use extracted clipboard handlers for clean copy/paste
+  const handleCopy = useMemo(
+    () => createCopyHandler(editor, serializeMarkdown),
+    [editor]
+  );
+
+  const handlePaste = useMemo(
+    () => createPasteHandler(editor, deserializeMarkdown, Transforms, {
+      onError: () => showToast(t('editor.pasteFailed')),
+    }),
+    [editor, t, showToast]
+  );
+
   const handleClick = (event) => {
     const target = event?.target;
     if (!(target instanceof Element)) return;
@@ -1438,6 +1474,8 @@ export function PlateMarkdownEditor({
           if (!readOnly) onEditIntent?.();
         }}
         onClick={handleClick}
+        onCopy={handleCopy}
+        onPaste={handlePaste}
       />
     </>
   );

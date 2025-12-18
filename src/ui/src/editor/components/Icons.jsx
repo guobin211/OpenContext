@@ -97,7 +97,7 @@ export const SparkleIcon = ({ className = '', size = 14 }) => (
  * Drag handle icon (six dots)
  */
 export const DragHandleIcon = ({ className = '' }) => (
-  <span className={`block leading-none text-sm ${className}`}>⋮⋮</span>
+  <span className={`block leading-none text-sm select-none ${className}`} style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>⋮⋮</span>
 );
 
 /**

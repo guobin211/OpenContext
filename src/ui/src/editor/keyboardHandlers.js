@@ -361,6 +361,72 @@ export function handleListEnterKey(event, editor) {
 }
 
 /**
+ * Handle Cmd+A / Ctrl+A for select all.
+ * Slate/Plate doesn't always handle this in Tauri WebView, so we implement it manually.
+ *
+ * @param {KeyboardEvent} event - The keyboard event
+ * @param {import('platejs/react').PlateEditor} editor - The Plate editor
+ * @returns {boolean} - True if the event was handled
+ */
+export function handleSelectAll(event, editor) {
+  if (event.key !== 'a') return false;
+  if (!event.metaKey && !event.ctrlKey) return false;
+  if (event.shiftKey || event.altKey) return false;
+
+  event.preventDefault();
+  try {
+    Transforms.select(editor, {
+      anchor: Editor.start(editor, []),
+      focus: Editor.end(editor, []),
+    });
+    return true;
+  } catch (err) {
+    console.error('Select all failed:', err);
+    return false;
+  }
+}
+
+/**
+ * Handle bulk delete when entire document is selected.
+ * Uses setValue to replace content directly, which is more efficient than
+ * letting Slate delete nodes one by one for large documents.
+ *
+ * @param {KeyboardEvent} event - The keyboard event
+ * @param {import('platejs/react').PlateEditor} editor - The Plate editor
+ * @returns {boolean} - True if the event was handled
+ */
+export function handleBulkDelete(event, editor) {
+  if (event.key !== 'Backspace' && event.key !== 'Delete') return false;
+
+  const sel = editor?.selection;
+  if (!sel || Range.isCollapsed(sel)) return false;
+
+  // Check if entire document is selected
+  const docStart = Editor.start(editor, []);
+  const docEnd = Editor.end(editor, []);
+  const isAllSelected =
+    Range.equals(sel, { anchor: docStart, focus: docEnd }) ||
+    Range.equals(sel, { anchor: docEnd, focus: docStart });
+
+  if (!isAllSelected) return false;
+
+  // For large documents, use setValue for better performance
+  if (editor.children.length > 10) {
+    event.preventDefault();
+    try {
+      editor.tf.setValue([{ type: 'p', id: Date.now().toString(), children: [{ text: '' }] }]);
+      Transforms.select(editor, Editor.start(editor, [0]));
+      return true;
+    } catch (err) {
+      console.error('Bulk delete failed:', err);
+      return false;
+    }
+  }
+
+  return false; // Let Slate handle small documents
+}
+
+/**
  * Create a combined keydown handler for the editor.
  *
  * @param {import('platejs/react').PlateEditor} editor - The Plate editor
@@ -371,6 +437,16 @@ export function handleListEnterKey(event, editor) {
  */
 export function createEditorKeyDownHandler(editor, callbacks = {}, config = DEFAULT_KEYBOARD_CONFIG) {
   return (event) => {
+    // Handle bulk delete (entire document selected)
+    if (handleBulkDelete(event, editor)) {
+      return;
+    }
+
+    // Handle Cmd+A / Ctrl+A for select all (Tauri WebView compatibility)
+    if (handleSelectAll(event, editor)) {
+      return;
+    }
+
     // Handle code block Enter (exit on empty last line)
     if (handleCodeBlockEnter(event, editor, config)) {
       return;
@@ -404,4 +480,3 @@ export function createEditorKeyDownHandler(editor, callbacks = {}, config = DEFA
 }
 
 export default createEditorKeyDownHandler;
-
