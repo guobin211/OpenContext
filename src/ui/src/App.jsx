@@ -354,12 +354,15 @@ export default function App() {
   };
 
   const handleRenameAction = (item) => {
+    const currentPath = item.rel_path || item.path;
+    // Only show the name part for renaming, not the full path
+    const currentName = basename(currentPath);
     setDialog({
       isOpen: true,
       type: 'prompt',
       title: t('dialog.rename.title'),
       placeholder: t('dialog.rename.placeholder'),
-      initialValue: item.rel_path || item.path,
+      initialValue: currentName,
       kind: 'RENAME',
       payload: { item }
     });
@@ -546,44 +549,35 @@ export default function App() {
       }
 
       if (kind === 'RENAME') {
-        const v = String(value || '').trim();
-        if (!v) return;
+        const newName = String(value || '').trim();
+        if (!newName) return;
+        // Validate: name should not contain path separators
+        if (newName.includes('/') || newName.includes('\\')) {
+          throw new Error(t('dialog.rename.invalidName') || 'Name cannot contain path separators');
+        }
+        
         const item = payload.item;
         const oldPath = item?.rel_path || item?.path;
         if (!oldPath) return;
+        const oldDir = dirname(oldPath);
 
         if (item?.type === 'folder') {
-          await api.renameFolder(oldPath, v);
+          await api.renameFolder(oldPath, newName);
           const data = await api.listFolders({ all: true });
           setFolders(data);
           return;
         }
 
-        const newPath = v;
-        const oldDir = dirname(oldPath);
-        const newDir = dirname(newPath);
-        const newNameOnly = basename(newPath);
-
-        if (oldDir !== newDir) {
-          if (!newDir) throw new Error('Root is not supported. Please move into a folder under contexts/.');
-          const moveRes = await moveDocFlow({ api, docRelPath: oldPath, targetFolderPath: newDir });
-          await api.renameDoc(moveRes.newRelPath, newNameOnly);
-          if (selectedDoc?.rel_path === oldPath) {
-            const finalPath = `${newDir}/${newNameOnly}`;
-            setSelectedDoc((prev) => (prev ? { ...prev, rel_path: finalPath } : prev));
-          }
-        } else {
-          await api.renameDoc(oldPath, newNameOnly);
-          if (selectedDoc?.rel_path === oldPath) {
-            const finalPath = oldDir ? `${oldDir}/${newNameOnly}` : newNameOnly;
-            setSelectedDoc((prev) => (prev ? { ...prev, rel_path: finalPath } : prev));
-          }
+        // For documents, just rename in place
+        await api.renameDoc(oldPath, newName);
+        if (selectedDoc?.rel_path === oldPath) {
+          const finalPath = oldDir ? `${oldDir}/${newName}` : newName;
+          setSelectedDoc((prev) => (prev ? { ...prev, rel_path: finalPath } : prev));
         }
 
         const data = await api.listFolders({ all: true });
         setFolders(data);
         if (oldDir) await refreshFolder(oldDir);
-        if (newDir && newDir !== oldDir) await refreshFolder(newDir);
         return;
       }
 
