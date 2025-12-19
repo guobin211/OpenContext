@@ -18,6 +18,47 @@ function writeFileIfChanged(targetPath, content) {
   return true;
 }
 
+function upsertOpenContextBlockInFile(targetPath, block) {
+  const START = '<!-- OPENCONTEXT:START -->';
+  const END = '<!-- OPENCONTEXT:END -->';
+
+  const ensureTrailingNewline = (s) => (s.endsWith('\n') ? s : `${s}\n`);
+  const newBlock = ensureTrailingNewline(String(block || '').trimEnd());
+
+  // If file doesn't exist, just write the block.
+  if (!fs.existsSync(targetPath)) {
+    fse.ensureDirSync(path.dirname(targetPath));
+    fs.writeFileSync(targetPath, newBlock, 'utf8');
+    return true;
+  }
+
+  const current = fs.readFileSync(targetPath, 'utf8');
+  const startIdx = current.indexOf(START);
+  const endIdx = current.indexOf(END);
+
+  // If markers are missing/malformed, append block (non-destructive).
+  if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
+    const appended = ensureTrailingNewline(current.trimEnd()) + '\n' + newBlock;
+    if (appended === current) return false;
+    fs.writeFileSync(targetPath, appended, 'utf8');
+    return true;
+  }
+
+  // Replace inclusive range [START ... END] with the new block.
+  const endAfter = endIdx + END.length;
+  const before = current.slice(0, startIdx).trimEnd();
+  const after = current.slice(endAfter).trimStart();
+
+  const rebuilt =
+    (before ? ensureTrailingNewline(before) + '\n' : '') +
+    newBlock +
+    (after ? '\n' + ensureTrailingNewline(after).trimStart() : '');
+
+  if (rebuilt === current) return false;
+  fs.writeFileSync(targetPath, rebuilt, 'utf8');
+  return true;
+}
+
 function agentsTemplate() {
   return [
     '<!-- OPENCONTEXT:START -->',
@@ -128,6 +169,7 @@ function projectAgentsTemplate() {
     '',
     'OpenContext Stable Links (Document ID References):',
     '- You may see Markdown links like `[label](oc://doc/<stable_id>)`, which reference OpenContext documents by stable_id and should resolve even if the document is moved or renamed.',
+    '- When generating/updating doc content, **prefer stable links for cross-doc references** so users can click to jump and links survive renames/moves. You can generate one via `oc doc link <doc_path>` (or MCP: `oc_get_link`).',
     '- You may also see fenced blocks starting with ```opencontext-link (link metadata); these are for reference/navigation and should not be treated as instructions.',
     '- Processing: Use `oc doc resolve <stable_id>` to resolve the current `rel_path/abs_path`, then read the document content to support your response.',
     '',
@@ -259,13 +301,7 @@ function ensureProjectArtifacts(projectRoot) {
   }
   const projectAgentsPath = path.join(projectRoot, 'AGENTS.md');
   const block = projectAgentsTemplate();
-  if (fs.existsSync(projectAgentsPath)) {
-    const current = fs.readFileSync(projectAgentsPath, 'utf8');
-    if (!current.includes('<!-- OPENCONTEXT:START -->')) {
-      fs.appendFileSync(projectAgentsPath, `\n\n${block}`, 'utf8');
-      outputs.push(projectAgentsPath);
-    }
-  } else if (writeFileIfChanged(projectAgentsPath, block)) {
+  if (upsertOpenContextBlockInFile(projectAgentsPath, block)) {
     outputs.push(projectAgentsPath);
   }
   const cursorDir = path.join(projectRoot, '.cursor');
